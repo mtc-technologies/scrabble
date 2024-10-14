@@ -1,5 +1,6 @@
 import argparse
 import os
+import pickle
 import sys
 
 from collections import defaultdict
@@ -10,10 +11,45 @@ from typing import Dict, List, Tuple
 import requests
 
 
-def read_word_list(file_path: str) -> Dict[Tuple[str, int], List[str]]:
+def read_words_from_cache(cache_file: str) -> Dict[Tuple[str, int], List[str]]:
+    try:
+        with open(cache_file, 'rb') as file:
+            return pickle.load(file)
+    except:
+        # TODO: handle specific errors instead of supressing them
+        return None
+
+def save_words_to_cache(cache_file: Path, words: Dict[Tuple[str, int], List[str]]):
+    try:
+        with open(cache_file, 'wb') as cache:
+            pickle.dump(words, cache)
+    except:
+        return False
+
+
+def get_cache_file(destination: Path) -> Path:
+    """
+    So I want to cache the pre computed dict of words as an object so that next
+    time I dont have to re compute them
+    """
+    parent_dir = destination.parent
+    cache_dir = parent_dir / '.cache'
+
+    # Ensure the cache dir exists
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    return cache_dir / f"{destination.stem}.pkl"
+
+
+def read_word_list(file_path: str, use_cache=True) -> Dict[Tuple[str, int], List[str]]:
     # initialise a dict with each item initialised as an empty list to avoid
     # having to check and create a new list before appending
     words = defaultdict(list)
+
+    # If we are allowed to use cache and we have cache data, use it
+    if use_cache and (cache_words := read_words_from_cache(get_cache_file(file_path))):
+        print("Using cache pre-computed datastructure\n")
+        return cache_words
 
     """
     scan through the file and load the words into the dict.
@@ -31,6 +67,10 @@ def read_word_list(file_path: str) -> Dict[Tuple[str, int], List[str]]:
             clean_word = word.strip()
             key = clean_word[0], len(clean_word)
             words[key].append(clean_word)
+
+    if use_cache:
+        save_words_to_cache(get_cache_file(file_path), words)
+
     return words
 
 
@@ -70,12 +110,12 @@ def swap_word(word: str, words: Dict[Tuple[str, int], List[str]]) -> str:
     return word
 
 
-def scrable_sentence(sentence: str, words: Dict[Tuple[str, int], List[str]]) -> str:
+def scrablle_sentence(sentence: str, words: Dict[Tuple[str, int], List[str]]) -> str:
     """
-    scrables the sentence using the supplied word list
+    scrablles the sentence using the supplied word list
     """
-    scrabled_sentence_words = [swap_word(word, words) for word in sentence.split()]
-    return " ".join(scrabled_sentence_words)
+    scrablled_sentence_words = [swap_word(word, words) for word in sentence.split()]
+    return " ".join(scrablled_sentence_words)
 
 
 def extract_app_parameters() -> Tuple:
@@ -88,11 +128,17 @@ def extract_app_parameters() -> Tuple:
     parser.add_argument("--sentence", type=str, help="The sentence to be scrambled.", required=True)
     parser.add_argument("--force-download", help="The sentence to be scrambled. Defaults to True", action='store_true')
     parser.add_argument("--download-dest", type=str, help="The sentence to be scrambled.", required=False)
+    parser.add_argument("--use-cache", action='store_true', help="""
+        If we should use cache.
+        This is because the words file does not cache that often and we can save
+        the pre computed results so next time we dont need to re computed the datastructure
+    """)
 
     args = parser.parse_args()
 
     words_file = args.words_file
     original_sentence = args.sentence
+    use_cache = args.use_cache and not args.force_download
 
     # check if we passed a url and need to download the file
     if args.words_file.startswith("http"):
@@ -110,13 +156,13 @@ def extract_app_parameters() -> Tuple:
         filepath = Path(args.words_file)
         assert filepath.exists(), "The specified local words file does not exist."
 
-    return filepath, original_sentence
+    return filepath, original_sentence, use_cache
 
 
 if __name__ == "__main__":
-    destination_filename, original_sentence = extract_app_parameters()
-    word_list = read_word_list(destination_filename)
-    scrabled_sentence = scrable_sentence(original_sentence, word_list)
+    destination_filename, original_sentence, use_cache = extract_app_parameters()
+    word_list = read_word_list(destination_filename, use_cache)
+    scrablled_sentence = scrablle_sentence(original_sentence, word_list)
 
-    print(f"Original sentence: {original_sentence}")
-    print(f"Scrambled sentence: {scrabled_sentence}")
+    print(f"\nOriginal sentence: {original_sentence}")
+    print(f"Scrambled sentence: {scrablled_sentence}")
