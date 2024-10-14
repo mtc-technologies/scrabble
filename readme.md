@@ -39,7 +39,7 @@ This version can read a words list file from a path or download the file from a 
 
 #### Checkout the Correct Version Tag
 ```shell
-git checkout v2-downloadable-and-cacheable-wordlist
+git checkout v2-downloadable-and-cacheable-wordlist && pip install -r requirements.txt
 ```
 
 #### To Get the List of Options Available
@@ -64,7 +64,7 @@ In this version, we improve the performance of the application by caching the wo
 
 #### Checkout the Correct Version Tag
 ```shell
-git checkout v3-cacheable-preprocessed-word-list
+git checkout v3-cacheable-preprocessed-word-list && pip install -r requirements.txt
 ```
 
 #### To Get the List of Options Available
