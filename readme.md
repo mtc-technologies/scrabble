@@ -60,7 +60,7 @@ python3 main.py --words-file https://raw.githubusercontent.com/dwyl/english-word
 ---
 
 ### v3 - Latest Version with Caching of Pre-Processed Words List Data Structure
-In this version, we improve the performance of the application by caching the words list processing output, so subsequent runs don't need to do the computation again. To run this version of the application, follow the instructions below.
+In this version, we improve the performance of the application by caching the words list processing output using pickle as the compueted output rarely changes, so subsequent runs don't need to do the computation again. To run this version of the application, follow the instructions below.
 
 #### Checkout the Correct Version Tag
 ```shell
