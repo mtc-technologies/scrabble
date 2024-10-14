@@ -1,4 +1,6 @@
 # Scrabble
+Simple program for scrabbling sentences based on word length and first character match
+
 
 ## Running the Application
 
